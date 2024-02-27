@@ -1,4 +1,4 @@
-import numpy as np
+import torch
 
 def Lydia(x0,niter_max,stepsize,oracle_f,oracle_gradf,xm1=None,fstar=None):
     ### Requires:
@@ -22,23 +22,24 @@ def Lydia(x0,niter_max,stepsize,oracle_f,oracle_gradf,xm1=None,fstar=None):
         ##Compute Lyapunov value
         f = oracle_f(x)
         #If fstar is unknown use best known value instead
-        minf = min(minf,f) if fstar is None else fstar
-        sqrtE = np.sqrt( f - minf + (1/2)*np.sum( (x-xm1)**2/stepsize, axis=-1) ) #Compute Lyapunov value
-        list_values.append(f) ; list_E.append(sqrtE**2) #store values of f
-        if niter==0:
-            # store inital value of E, if fstar not provided use 0 by default
-            sqrtE0=np.copy(sqrtE) if fstar is not None else np.sqrt( f - 0. + (1/2)*np.sum( (x-xm1)**2/stepsize, axis=-1) ) #Store initial first value
+        with torch.no_grad():
+            minf = min(minf,f) if fstar is None else fstar
+            sqrtE = torch.sqrt( f - minf + (1/2)*torch.sum( (x-xm1)**2/stepsize, dim=-1) ) #Compute Lyapunov value
+            list_values.append(f) ; list_E.append(sqrtE**2) #store values of f
+            if niter==0:
+                # store inital value of E, if fstar not provided use 0 by default
+                sqrtE0=sqrtE.clone().detach() if fstar is not None else torch.sqrt( f - 0. + (1/2)*torch.sum( (x-xm1)**2/stepsize, dim=-1) ) #Store initial first value
         ##Compute extrapolated point y
         y = x + (1.-sqrtE/sqrtE0)*(x-xm1)
         ##Update x
-        xm1 = np.copy(x) #Current x will become previous x
-        gradf = oracle_gradf(y) #compute gradient at y
+        xm1 = x.clone().detach() #Current x will become previous x
+        gradf = oracle_gradf(y,oracle_f) #compute gradient at y
         x = y - stepsize*gradf #do a gradient step with extrapolated variable y
 
     ## Compute final values
     f = oracle_f(x)
     minf = min(minf,f) if fstar is None else fstar
-    sqrtE = np.sqrt( f - minf + np.sum( (x-xm1)**2/stepsize, axis=-1) ) #Compute Lyapunov value
+    sqrtE = torch.sqrt( f - minf + torch.sum( (x-xm1)**2/stepsize, dim=-1) ) #Compute Lyapunov value
     list_values.append(f) ; list_E.append(sqrtE**2) #store values of f
 
     return list_values, list_E, x

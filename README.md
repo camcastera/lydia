@@ -1,6 +1,6 @@
 This is the python code for the LYDIA algorithm introduced in the paper [Near-optimal Closed-loop Method via Lyapunov Damping for Convex Optimization](https://arxiv.org/abs/2311.10053)
 
-The algorithm takes the form of a python function (relying on numpy) that takes the following parameters as input:
+The algorithm takes the form of a python function (relying on either [numpy](https://github.com/camcastera/lydia/tree/master/Numpy) or [pytorch](https://github.com/camcastera/lydia/tree/master/Pytorch)) that takes the following parameters as input:
 
 * x0: initial point (a numpy array of given dimension)
 * niter_max: total number of iteration

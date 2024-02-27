@@ -24,6 +24,7 @@ def oracle_gradf(x):
 ### Parameters of the algorithm
 niter_max = 500
 fstar=0.
+#fstar=None
 stepsize = 1./np.max(D) # There is no global Lipschitz constant
 
 
