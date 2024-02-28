@@ -1,4 +1,5 @@
-## This optimizer is adapted from the pytorch implementation of SGD (https://pytorch.org/docs/stable/_modules/torch/optim/sgd.html#SGD)
+## @author: Camille Castera
+## inspired from the pytorch implementation of SGD (https://pytorch.org/docs/stable/_modules/torch/optim/sgd.html#SGD)
 
 
 import torch
@@ -27,8 +28,9 @@ class LYDIA(Optimizer):
         for group in self.param_groups:
             for p in group["params"]:
                 state = self.state[p]
+                sum_along = list(range(len(p.shape))) #sum along all dimensions
                 # Compute (x_k-x_{k-1})**2
-                diff_square += torch.sum( (p-state["previous_step"])**2, dim=-1)
+                diff_square += torch.sum( (p-state["previous_step"])**2, dim=sum_along)
         return torch.sqrt( (value - fstar) + 1/(2*stepsize) * diff_square )
 
     @torch.no_grad() #The function below is not part of the graph
