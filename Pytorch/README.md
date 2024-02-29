@@ -3,7 +3,7 @@ This is the Pytorch version for the LYDIA algorithm introduced in the paper [Nea
 The algorithm is available in 2 forms:
 
 1. A [pytorch optimizer](https://github.com/camcastera/lydia/tree/master/LYDIA_optim) (as those implemented in torch.optim) which can simply be used like other optimizers via the ".step()" function.
-2. A ["loop" implementation](https://github.com/camcastera/lydia/tree/master/Loop_version) where the optimizer is a python function that implements the whole optimization loop (like the [numpy](https://github.com/camcastera/lydia/tree/master/Numpy) version does) 
+2. A ["loop" implementation](https://github.com/camcastera/lydia/tree/master/Pytorch/Loop_version) where the optimizer is a python function that implements the whole optimization loop (like the [numpy](https://github.com/camcastera/lydia/tree/master/Numpy) version does) 
 
 WARNING: To reduce computational cost, the pytorch optimizer version slightly differs from that introduced in the [paper](https://arxiv.org/abs/2311.10053). Namely, the gradient is evaluated at $x_k$ and not $y_k$ (i.e. no extrapolation). The loop version is faithful to the paper version.
 
