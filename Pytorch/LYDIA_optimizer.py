@@ -9,12 +9,13 @@ from torch.optim import Optimizer
 
 class LYDIA(Optimizer):
     def __init__(self, params, lr=1e-3, weight_decay=0, fstar=None):
-        print('TODO: need to implement the case where fstar is unknown')
-        print('TODO: implement weight_decay')
         if lr < 0.0:
             raise ValueError(f"Invalid learning rate: {lr}")
         if weight_decay < 0.0:
             raise ValueError(f"Invalid weight_decay value: {weight_decay}")
+        if fstar is None:
+            fstar = 0
+            print('Warning: if known, consider providing optimal value fstar for optimal performance')
         self.damping0 = None #Computed later (to normalize)
         defaults = dict(lr=lr, fstar=fstar, weight_decay=weight_decay)
         super().__init__(params, defaults)
@@ -23,23 +24,28 @@ class LYDIA(Optimizer):
         super().__setstate__(state)
 
     @torch.no_grad() #The function below is not part of the graph
-    def compute_Lyapunov_damping(self,value,stepsize,fstar):
+    def compute_Lyapunov_damping(self,value,stepsize,fstar,weight_decay):
         diff_square = 0.
+        param_L2_norm = 0. # if weight_decay>0 then also compute squared-norm of parameters
         for group in self.param_groups:
             for p in group["params"]:
                 state = self.state[p]
                 sum_along = list(range(len(p.shape))) #sum along all dimensions
                 # Compute (x_k-x_{k-1})**2
                 diff_square += torch.sum( (p-state["previous_step"])**2, dim=sum_along)
-        return torch.sqrt( (value - fstar) + 1/(2*stepsize) * diff_square )
+                if weight_decay>0:
+                    param_L2_norm += torch.sum(p**2, dim=sum_along)
+        return torch.sqrt( (value + weight_decay/2*param_L2_norm - fstar) + 1/(2*stepsize) * diff_square )
 
     @torch.no_grad() #The function below is not part of the graph
-    def step(self,value):
+    def step(self,value=None):
         """Performs a single optimization step.
 
         Args:
             value: current value of the loss
         """
+        if value is None:
+            raise ValueError(f"Please provide the current value of the loss function via .step(value=loss) where loss is a scalar.")
 
 
         ## State initialization
@@ -54,7 +60,7 @@ class LYDIA(Optimizer):
 
         ## Compute Lyapunov value
         damping = self.compute_Lyapunov_damping(value=value,
-            stepsize=self.defaults['lr'], fstar=self.defaults['fstar'])
+            stepsize=self.defaults['lr'], fstar=self.defaults['fstar'], weight_decay=self.defaults['weight_decay'])
 
         #Store initial damping
         if self.damping0 is None:
@@ -66,10 +72,11 @@ class LYDIA(Optimizer):
                 if p.grad is None:
                     continue
                 grad = p.grad
+                if self.defaults['weight_decay']>0:
+                    grad += self.defaults['weight_decay'] * p
 
                 state = self.state[p]
                 temp = p.clone().detach() #Store p to update previous step later for later
-
 
                 p.add_( (1.-damping/self.damping0)*(p-state["previous_step"]) - self.defaults['lr']*grad  ) #x_{k+1} = x_k - (1-sqrt(Ek/E0))*(x_k-x_{k-1}) - s*grad
 

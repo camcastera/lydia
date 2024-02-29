@@ -1,14 +1,13 @@
 import numpy as np
 import torch
 import matplotlib.pyplot as plt
-from LYDIA_optim import LYDIA
+from LYDIA_optimizer import LYDIA
 
 plt.close('all') #close open figures if any
 
 n = 20 #Dimension of the problem
 
 
-print('TODO: implement extrapolation')
 
 #Example 1
 x0 = 10*torch.ones(n)

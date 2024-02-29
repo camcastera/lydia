@@ -56,10 +56,10 @@ model = Net()
 
 
 ## Initialize the LYDIA algorithm
-from LYDIA_optim import LYDIA
+from LYDIA_optimizer import LYDIA
 
 criterion = nn.CrossEntropyLoss()
-optimizer = LYDIA(model.parameters(), lr=1e-2,fstar=0.) #Takes the variable to optimize, a step-size and optionally fstar
+optimizer = LYDIA(model.parameters(), lr=1e-2 ,fstar=0., weight_decay=1e-6) #Takes the variable to optimize, a step-size and optionally fstar
 
 ## Train
 
